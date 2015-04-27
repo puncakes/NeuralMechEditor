@@ -22,7 +22,15 @@ public class grid_items : MonoBehaviour {
 		for(int i = 0; i < _prefabs.Length; i++) {
 			int crappyscopehack = i;
 			GameObject b = (GameObject)Instantiate(buttonPrefab);
-			Texture2D t = AssetPreview.GetAssetPreview(_prefabs[i]);
+
+			Texture2D t = null;
+			int count = 0;
+			while(t == null && count < 75)
+			{
+				t = AssetPreview.GetAssetPreview(_prefabs[i]);
+				count++;
+				System.Threading.Thread.Sleep(15);
+			}
 			b.GetComponentInChildren<Image>().sprite = Sprite.Create(t, new Rect(0,0,t.width,t.height), new Vector2(0.5f,0.5f));
 			b.transform.SetParent(layoutPanel, false);
 
@@ -37,6 +45,7 @@ public class grid_items : MonoBehaviour {
 		//call cursor script and hand the prefab to it
 		MyCursor c = (MyCursor)GameObject.Find ("Main Camera").GetComponent (typeof(MyCursor));
 		c.CurrentObject = go;
+		c.requestState (MyCursor.CursorState.Placing);
 
 	}
 
