@@ -43,9 +43,8 @@ public class grid_items : MonoBehaviour {
 	{
 		GameObject go = Instantiate (_prefabs[index]);
 		//call cursor script and hand the prefab to it
-		MyCursor c = (MyCursor)GameObject.Find ("Main Camera").GetComponent (typeof(MyCursor));
-		c.CurrentObject = go;
-		c.requestState (MyCursor.CursorState.Placing);
+
+		MyCursor.Instance.RequestState (go, MyCursor.CursorState.Placing);
 
 	}
 

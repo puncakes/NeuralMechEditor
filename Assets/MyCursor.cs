@@ -9,14 +9,18 @@ using System.Collections.Generic;
 public class MyCursor : MonoBehaviour {
 
 	public GameObject MechRoot;
-	public GameObject CurrentObject;
+	public static GameObject CurrentObject;
 	public GameObject SelectionPanel;
 	public Camera _camera;
+
+	//Cursor textures
+	public Texture2D _hovering, _moving;
 
 	public List<Transform> _selectedTransforms = new List<Transform>();
 
 	public enum CursorState {
 		Default,
+		Hovering,
 		Placing,
 		Dragging,
 		Selecting,
@@ -28,17 +32,46 @@ public class MyCursor : MonoBehaviour {
 
 	private CursorState _currentState, _previousState;
 
-	// Use this for initialization
-	void Start () {
+
+	public static MyCursor Instance { get; private set; }
+	
+	void Awake()
+	{
+		init ();
+		Instance = this;
+	}
+
+	private void init()
+	{
 		_camera = this.gameObject.GetComponent<Camera>();
 		_currentState = CursorState.Default;
 		SelectionPanel.GetComponent<RectTransform>().sizeDelta = Vector2.zero;
 	}
 
-	public void requestState(CursorState cs)
+	private bool requestAllowed()
 	{
-		//temporary grant-all
-		_currentState = cs;
+		//TODO:truth table for cursor states
+	}
+
+	public void RequestState(GameObject go, CursorState cs)
+	{
+		//allow other scripts to change the cursor state only when in the default state
+		Debug.Log ("Current State: " + _currentState.ToString () + "  Requested State: " +cs.ToString());
+
+		//if(requestAllowed(cs))
+
+
+		if (_currentState == CursorState.Default || _currentState == CursorState.Selecting
+		    || cs == CursorState.Default) {
+			CurrentObject = go;
+			_previousState = _currentState;
+			_currentState = cs;
+		}
+	}
+
+	private void requestState(CursorState cs)
+	{
+		RequestState(null, cs);
 	}
 
 	private Vector3 getScreenToWorld()
@@ -74,10 +107,17 @@ public class MyCursor : MonoBehaviour {
 	}
 
 	// Update is called once per frame
-	void Update () {
+	public void DoUpdate () {
+
+		CursorState stateAtStartOfFrame = _currentState;
 
 		switch (_currentState) {
 		case CursorState.Default:
+			if(_previousState != CursorState.Default)
+			{
+				//Debug.Log("Default");
+				Cursor.SetCursor(null, Vector2.zero, CursorMode.Auto);
+			}
 			if (Input.GetMouseButtonDown (0)) {
 				startClick = Input.mousePosition;
 				SelectionPanel.GetComponent<CanvasGroup>().alpha = 1;
@@ -85,7 +125,26 @@ public class MyCursor : MonoBehaviour {
 			}
 			break;
 
+		case CursorState.Hovering:
+			if(_previousState != CursorState.Hovering)
+			{
+				//Debug.Log("Hovering");
+				Cursor.SetCursor(_hovering, Vector2.zero, CursorMode.Auto);
+			}
+			break;
+
+		case CursorState.Moving:
+			if(_previousState != CursorState.Moving)
+			{
+				//Debug.Log("Moving");
+				Cursor.SetCursor(_moving, Vector2.zero, CursorMode.Auto);
+			}
+			break;
 		case CursorState.Selecting:
+			if(_previousState != CursorState.Selecting)
+			{
+				//Debug.Log("Selecting");
+			}
 			if (Input.GetMouseButton (0)) {
 
 				//TODO: toggle selections
@@ -145,6 +204,7 @@ public class MyCursor : MonoBehaviour {
 			break;
 		
 		case CursorState.Placing:
+			//Debug.Log("Placing");
 			if (CurrentObject != null) 
 			{
 				CurrentObject.transform.position = getScreenToWorld();
@@ -166,8 +226,6 @@ public class MyCursor : MonoBehaviour {
 				continue;
 			r.material.color = Color.green;
 		}
-
-		_previousState = _currentState;
-
+		_previousState = stateAtStartOfFrame;
 	}
 }
