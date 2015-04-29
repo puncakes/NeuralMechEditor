@@ -13,13 +13,13 @@ public class RobotPart : MonoBehaviour {
 	
 	}
 
-	void OnMouseEnter()
+	void OnMouseOver()
 	{
 		MyCursor.Instance.RequestState (this.gameObject, MyCursor.CursorState.Hovering);
 	}
 
 	void OnMouseExit()
 	{
-		MyCursor.Instance.RequestState (this.gameObject, MyCursor.CursorState.Default);
+		MyCursor.Instance.RequestState (this.gameObject, MyCursor.CursorState.Dummy);
 	}
 }

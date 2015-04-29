@@ -28,7 +28,8 @@ public class MyCursor : MonoBehaviour {
 		Dragging	=8,
 		Selecting	=16,
 		Panning		=32,
-		Moving		=64
+		Moving		=64,
+		Dummy		=128
 	}
 
 	public static Rect selection = new Rect(0,0,0,0);
@@ -63,11 +64,12 @@ public class MyCursor : MonoBehaviour {
 
 		_allowedTransitions.Add (CursorState.Default, All & ~(CursorState.Default)); 	
 		_allowedTransitions.Add (CursorState.Hovering, All & ~(CursorState.Hovering));
-		_allowedTransitions.Add (CursorState.Placing, All & ~(CursorState.Placing | CursorState.Hovering));
+		_allowedTransitions.Add (CursorState.Placing, All & ~(CursorState.Placing | CursorState.Hovering | CursorState.Dummy));
 		_allowedTransitions.Add (CursorState.Dragging, All & ~(CursorState.Dragging));
 		_allowedTransitions.Add (CursorState.Selecting, All & ~(CursorState.Selecting));
 		_allowedTransitions.Add (CursorState.Panning, All & ~(CursorState.Panning));
-		_allowedTransitions.Add (CursorState.Moving, All & ~(CursorState.Moving));
+		_allowedTransitions.Add (CursorState.Moving, All & ~(CursorState.Moving | CursorState.Hovering | CursorState.Dummy));
+		_allowedTransitions.Add (CursorState.Dummy, All & ~(CursorState.Dummy));
 	}
 
 	private bool isRequestAllowed(CursorState cs)
@@ -152,11 +154,18 @@ public class MyCursor : MonoBehaviour {
 			}
 			break;
 
+		case CursorState.Dummy:
+			requestState(CursorState.Default);
+			break;
+
 		case CursorState.Hovering:
 			if(_previousState != CursorState.Hovering)
 			{
 				//Debug.Log("Hovering");
-				Cursor.SetCursor(_hovering, Vector2.zero, CursorMode.Auto);
+				Cursor.SetCursor(_hovering, new Vector2(_hovering.width / 2, _hovering.height / 2), CursorMode.Auto);
+			}
+			if (Input.GetMouseButtonDown (0)) {
+				requestState(CursorState.Moving);
 			}
 			break;
 
@@ -166,6 +175,9 @@ public class MyCursor : MonoBehaviour {
 				//Debug.Log("Moving");
 				Cursor.SetCursor(_moving, Vector2.zero, CursorMode.Auto);
 			}
+
+			//TODO:move selected objects from mouse delta
+
 			break;
 		case CursorState.Selecting:
 			if(_previousState != CursorState.Selecting)
