@@ -1,7 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
 using UnityEngine.UI;
-using UnityEditor;
 
 public class grid_items : MonoBehaviour {
 
@@ -21,20 +20,28 @@ public class grid_items : MonoBehaviour {
 		_prefabs = Resources.LoadAll<GameObject> (path);
 		for(int i = 0; i < _prefabs.Length; i++) {
 			int crappyscopehack = i;
+
 			GameObject b = (GameObject)Instantiate(buttonPrefab);
 
-			Texture2D t = null;
-			int count = 0;
-			while(t == null && count < 75)
-			{
-				t = AssetPreview.GetAssetPreview(_prefabs[i]);
-				count++;
-				System.Threading.Thread.Sleep(15);
-			}
-			b.GetComponentInChildren<Image>().sprite = Sprite.Create(t, new Rect(0,0,t.width,t.height), new Vector2(0.5f,0.5f));
 			b.transform.SetParent(layoutPanel, false);
 
 			Button bu = b.GetComponent<Button>();
+
+			GameObject go = Instantiate(_prefabs[i]);
+
+			Collider2D[] col = go.GetComponents<Collider2D>();
+			for(int x = 0; x < col.Length; x++)
+			{
+				col[x].enabled = false;
+			}
+			SpriteRenderer[] ren = go.GetComponents<SpriteRenderer>();
+			for(int x = 0; x < ren.Length; x++)
+			{
+				ren[x].sortingOrder = 1;
+			}
+
+			go.transform.SetParent(b.transform, false);
+			go.transform.localScale = new Vector3(50,50,1);
 			bu.onClick.AddListener(() => genPrefab(crappyscopehack));
 		}
 	}

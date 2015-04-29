@@ -36,6 +36,7 @@ public class MyCursor : MonoBehaviour {
 	private Vector3 startClick = -Vector3.one;
 
 	private CursorState _currentState, _previousState;
+	private Vector3 _prevMousePos;
 
 	private Dictionary<CursorState, CursorState> _allowedTransitions = new Dictionary<CursorState, CursorState> ();
 
@@ -66,7 +67,7 @@ public class MyCursor : MonoBehaviour {
 		_allowedTransitions.Add (CursorState.Hovering, All & ~(CursorState.Hovering));
 		_allowedTransitions.Add (CursorState.Placing, All & ~(CursorState.Placing | CursorState.Hovering | CursorState.Dummy));
 		_allowedTransitions.Add (CursorState.Dragging, All & ~(CursorState.Dragging));
-		_allowedTransitions.Add (CursorState.Selecting, All & ~(CursorState.Selecting));
+		_allowedTransitions.Add (CursorState.Selecting, All & ~(CursorState.Selecting | CursorState.Hovering | CursorState.Dummy));
 		_allowedTransitions.Add (CursorState.Panning, All & ~(CursorState.Panning));
 		_allowedTransitions.Add (CursorState.Moving, All & ~(CursorState.Moving | CursorState.Hovering | CursorState.Dummy));
 		_allowedTransitions.Add (CursorState.Dummy, All & ~(CursorState.Dummy));
@@ -112,11 +113,9 @@ public class MyCursor : MonoBehaviour {
 	{
 		Vector3 worldVec = _camera.ScreenToWorldPoint (new Vector3 (vec.x, vec.y, 10));
 		RaycastHit2D hit = Physics2D.Raycast(new Vector2(worldVec.x, worldVec.y), Vector2.zero);
-		if (hit) {
-			Renderer r = hit.transform.gameObject.GetComponent<Renderer>();
-			if(!r)
-				return;
-			r.material.color = Color.green;
+		if (hit && hit.transform.parent == MechRoot.transform) {
+			if(!_selectedTransforms.Contains(hit.transform))
+				_selectedTransforms.Add(hit.transform);
 		}
 	}
 
@@ -164,8 +163,13 @@ public class MyCursor : MonoBehaviour {
 				//Debug.Log("Hovering");
 				Cursor.SetCursor(_hovering, new Vector2(_hovering.width / 2, _hovering.height / 2), CursorMode.Auto);
 			}
-			if (Input.GetMouseButtonDown (0)) {
-				requestState(CursorState.Moving);
+			if (Input.GetMouseButton (0)) {
+				if(_selectedTransforms.Count > 0 && !Input.GetKey(KeyCode.LeftControl)) //if there are selections and more are not trying to be added
+				{
+					requestState(CursorState.Moving);
+				} else {
+					checkPosForSelection(Input.mousePosition);
+				}
 			}
 			break;
 
@@ -174,6 +178,21 @@ public class MyCursor : MonoBehaviour {
 			{
 				//Debug.Log("Moving");
 				Cursor.SetCursor(_moving, Vector2.zero, CursorMode.Auto);
+			}
+
+			if (Input.GetMouseButton (0)) {
+				Vector3 prevWorldPos = _camera.ScreenToWorldPoint(new Vector3(_prevMousePos.x, _prevMousePos.y, 10));
+				Vector3 curWorld = getScreenToWorld();
+
+				Vector3 worldDelta = curWorld - prevWorldPos;
+				worldDelta.z = 0;
+
+				foreach(Transform t in _selectedTransforms)
+				{
+					t.position += worldDelta;
+				}
+			} else {
+				requestState(CursorState.Default);
 			}
 
 			//TODO:move selected objects from mouse delta
@@ -222,9 +241,10 @@ public class MyCursor : MonoBehaviour {
 					foreach(Transform t in ts)
 					{
 						Vector3 pos = _camera.WorldToScreenPoint(t.position);
-						if(selection.Contains(pos))
+						if(selection.Contains(pos) && t.parent == MechRoot.transform) // only add top lvl gameobjects 
 						{
-							_selectedTransforms.Add(t);
+							if(!_selectedTransforms.Contains(t.transform))
+								_selectedTransforms.Add(t);
 						}
 					}
 
@@ -266,5 +286,6 @@ public class MyCursor : MonoBehaviour {
 			r.material.color = Color.green;
 		}
 		_previousState = stateAtStartOfFrame;
+		_prevMousePos = Input.mousePosition;
 	}
 }
