@@ -5,6 +5,7 @@ using System.Collections.Generic;
 
 //ain't nobody called danburg >:\
 //actually there is
+using System;
 
 public class MyCursor : MonoBehaviour {
 
@@ -18,19 +19,24 @@ public class MyCursor : MonoBehaviour {
 
 	public List<Transform> _selectedTransforms = new List<Transform>();
 
+	[Flags]
 	public enum CursorState {
-		Default,
-		Hovering,
-		Placing,
-		Dragging,
-		Selecting,
-		Panning,
-		Moving
+		None		=0,
+		Default		=1,
+		Hovering	=2,
+		Placing		=4,
+		Dragging	=8,
+		Selecting	=16,
+		Panning		=32,
+		Moving		=64
 	}
+
 	public static Rect selection = new Rect(0,0,0,0);
 	private Vector3 startClick = -Vector3.one;
 
 	private CursorState _currentState, _previousState;
+
+	private Dictionary<CursorState, CursorState> _allowedTransitions = new Dictionary<CursorState, CursorState> ();
 
 
 	public static MyCursor Instance { get; private set; }
@@ -43,14 +49,38 @@ public class MyCursor : MonoBehaviour {
 
 	private void init()
 	{
+		setTransitions ();
+
 		_camera = this.gameObject.GetComponent<Camera>();
 		_currentState = CursorState.Default;
 		SelectionPanel.GetComponent<RectTransform>().sizeDelta = Vector2.zero;
 	}
 
-	private bool requestAllowed()
+	private void setTransitions()
 	{
-		//TODO:truth table for cursor states
+		//value containing all enums
+		CursorState All = (CursorState)Math.Pow(2, Enum.GetNames(typeof(CursorState)).Length-1) - 1;
+
+		_allowedTransitions.Add (CursorState.Default, All & ~(CursorState.Default)); 	
+		_allowedTransitions.Add (CursorState.Hovering, All & ~(CursorState.Hovering));
+		_allowedTransitions.Add (CursorState.Placing, All & ~(CursorState.Placing | CursorState.Hovering));
+		_allowedTransitions.Add (CursorState.Dragging, All & ~(CursorState.Dragging));
+		_allowedTransitions.Add (CursorState.Selecting, All & ~(CursorState.Selecting));
+		_allowedTransitions.Add (CursorState.Panning, All & ~(CursorState.Panning));
+		_allowedTransitions.Add (CursorState.Moving, All & ~(CursorState.Moving));
+	}
+
+	private bool isRequestAllowed(CursorState cs)
+	{
+		CursorState transitions;
+
+		_allowedTransitions.TryGetValue (_currentState, out transitions);
+
+		if ((transitions & cs) == cs) {
+			return true;
+		}
+
+		return false;
 	}
 
 	public void RequestState(GameObject go, CursorState cs)
@@ -58,11 +88,8 @@ public class MyCursor : MonoBehaviour {
 		//allow other scripts to change the cursor state only when in the default state
 		Debug.Log ("Current State: " + _currentState.ToString () + "  Requested State: " +cs.ToString());
 
-		//if(requestAllowed(cs))
-
-
-		if (_currentState == CursorState.Default || _currentState == CursorState.Selecting
-		    || cs == CursorState.Default) {
+		if(isRequestAllowed(cs))
+		{
 			CurrentObject = go;
 			_previousState = _currentState;
 			_currentState = cs;
