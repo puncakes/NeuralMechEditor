@@ -17,7 +17,8 @@ public class MyCursor : MonoBehaviour {
 	//Cursor textures
 	public Texture2D _hovering, _moving;
 
-	public List<Transform> _selectedTransforms = new List<Transform>();
+	private List<Transform> _selectedTransforms = new List<Transform>();
+	public List<Transform> SelectedTransforms { get {return _selectedTransforms;} }
 
 	[Flags]
 	public enum CursorState {
@@ -89,7 +90,7 @@ public class MyCursor : MonoBehaviour {
 	public void RequestState(GameObject go, CursorState cs)
 	{
 		//allow other scripts to change the cursor state only when in the default state
-		Debug.Log ("Current State: " + _currentState.ToString () + "  Requested State: " +cs.ToString());
+		//Debug.Log ("Current State: " + _currentState.ToString () + "  Requested State: " +cs.ToString());
 
 		if(isRequestAllowed(cs))
 		{
@@ -162,6 +163,11 @@ public class MyCursor : MonoBehaviour {
 			{
 				//Debug.Log("Hovering");
 				Cursor.SetCursor(_hovering, new Vector2(_hovering.width / 2, _hovering.height / 2), CursorMode.Auto);
+			}
+			if(Input.GetKey(KeyCode.T) && Input.GetMouseButtonDown(0))
+			{
+				Vector3 localCoords = CurrentObject.transform.InverseTransformPoint(getScreenToWorld());
+				Debug.Log("Local Coords: " + localCoords.ToString());
 			}
 			if (Input.GetMouseButton (0)) {
 				if(_selectedTransforms.Count > 0 && !Input.GetKey(KeyCode.LeftControl)) //if there are selections and more are not trying to be added
@@ -246,13 +252,24 @@ public class MyCursor : MonoBehaviour {
 				Transform[] ts = MechRoot.GetComponentsInChildren<Transform>();
 				if(ts.Length != 0)
 				{
-					foreach(Transform t in ts)
+					List<Transform> tsList = new List<Transform>(ts);
+					tsList.Remove(MechRoot.transform);
+					foreach(Transform t in tsList)
 					{
 						Vector3 pos = _camera.WorldToScreenPoint(t.position);
-						if(selection.Contains(pos) && t.parent == MechRoot.transform) // only add top lvl gameobjects 
+						if(selection.Contains(pos))
 						{
 							if(!_selectedTransforms.Contains(t.transform))
 								_selectedTransforms.Add(t);
+						}
+					}
+
+					//loop for making sure topmost transform is selected
+					foreach(Transform t in tsList)
+					{
+						for(int i = 0; i < t.childCount; i++)
+						{
+							_selectedTransforms.Remove(t.GetChild(i));
 						}
 					}
 
