@@ -166,7 +166,13 @@ public class MyCursor : MonoBehaviour {
 			if (Input.GetMouseButton (0)) {
 				if(_selectedTransforms.Count > 0 && !Input.GetKey(KeyCode.LeftControl)) //if there are selections and more are not trying to be added
 				{
-					requestState(CursorState.Moving);
+					//if the cursor is actually above a selected item
+					Vector3 worldVec = getScreenToWorld();
+					RaycastHit2D hit = Physics2D.Raycast(new Vector2(worldVec.x, worldVec.y), Vector2.zero);
+					if (_selectedTransforms.Contains(hit.transform))
+					{
+						requestState(CursorState.Moving);
+					}
 				} else {
 					checkPosForSelection(Input.mousePosition);
 				}
@@ -177,7 +183,7 @@ public class MyCursor : MonoBehaviour {
 			if(_previousState != CursorState.Moving)
 			{
 				//Debug.Log("Moving");
-				Cursor.SetCursor(_moving, Vector2.zero, CursorMode.Auto);
+				Cursor.SetCursor(_moving, new Vector2(_moving.width / 2, _moving.height / 2), CursorMode.Auto);
 			}
 
 			if (Input.GetMouseButton (0)) {

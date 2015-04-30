@@ -35,3 +35,5 @@ ehthumbs.db
 # Project Generated #
 # ================= #
 *.app/
+*.exe
+*_Data/
