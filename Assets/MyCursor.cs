@@ -169,10 +169,12 @@ public class MyCursor : MonoBehaviour {
 					//if the cursor is actually above a selected item
 					Vector3 worldVec = getScreenToWorld();
 					RaycastHit2D hit = Physics2D.Raycast(new Vector2(worldVec.x, worldVec.y), Vector2.zero);
-					if (_selectedTransforms.Contains(hit.transform))
+					if (hit && !_selectedTransforms.Contains(hit.transform))
 					{
-						requestState(CursorState.Moving);
+						UnselectAll();
+						_selectedTransforms.Add(hit.transform);
 					}
+					requestState(CursorState.Moving);
 				} else {
 					checkPosForSelection(Input.mousePosition);
 				}

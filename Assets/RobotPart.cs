@@ -5,7 +5,10 @@ public class RobotPart : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-
+		//Collider2D[] col = this.gameObject.transform.root.gameObject.GetComponents<Collider2D> ();
+		//foreach (Collider2D c in col) {
+		//	c.enabled = false;
+		//}
 	}
 	
 	// Update is called once per frame
