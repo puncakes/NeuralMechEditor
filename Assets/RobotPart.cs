@@ -3,6 +3,8 @@ using System.Collections;
 
 public class RobotPart : MonoBehaviour {
 
+	public bool Selected { get; set; }
+
 	// Use this for initialization
 	void Start () {
 		//Collider2D[] col = this.gameObject.transform.root.gameObject.GetComponents<Collider2D> ();

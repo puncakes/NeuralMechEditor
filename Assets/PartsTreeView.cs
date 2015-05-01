@@ -40,6 +40,7 @@ public class PartsTreeView : MonoBehaviour {
 	void clearStructure ()
 	{
 		for (int i = 0; i < count; i++) {
+			_buttons[i].GetComponent<Button>().image.color = Color.white;
 			CanvasGroup cg = _buttons[i].GetComponent<CanvasGroup>();
 			cg.alpha = 0;
 			cg.interactable = false;
@@ -48,11 +49,16 @@ public class PartsTreeView : MonoBehaviour {
 
 	void createStructure (Transform node, int lvl)
 	{
-		//breadth first traversal of the tree;	
 		for (int i = 0; i < node.childCount; i++) {
 			Transform t = node.GetChild (i);
 
-			_buttons[count].GetComponent<DragHandler>().LinkedGameObject = t.gameObject;
+			DragHandler drag = _buttons[count].GetComponent<DragHandler>();
+			drag.LinkedGameObject = t.gameObject;
+			if(drag.LinkedGameObject.GetComponent<RobotPart>().Selected)
+			{
+				_buttons[count].GetComponent<Button>().image.color = Color.green;
+			}
+
 
 			GameObject b = _buttons[count];
 		
@@ -64,10 +70,12 @@ public class PartsTreeView : MonoBehaviour {
 			bu.GetComponentInChildren<Text> ().text = "".PadLeft (lvl * 2) + t.gameObject.name;
 
 			count++;
+
+			//for (int x = 0; x < node.childCount; x++) {
+				createStructure(t, lvl + 1);
+			//}
 		}		
-		for (int i = 0; i < node.childCount; i++) {
-			createStructure(node.GetChild(i), lvl + 1);
-		}
+
 	
 	}
 }

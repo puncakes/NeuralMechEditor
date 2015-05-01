@@ -77,6 +77,19 @@ public class MyCursor : MonoBehaviour {
 		_allowedTransitions.Add (CursorState.Menu, CursorState.Default);
 	}
 
+	public void selectGameObject (GameObject linkedGameObject)
+	{
+		if (linkedGameObject && !_selectedTransforms.Contains (linkedGameObject.transform)) {
+			if(Input.GetKey(KeyCode.LeftControl))
+			{
+				_selectedTransforms.Add(linkedGameObject.transform);
+			} else {
+				UnselectAll();
+				_selectedTransforms.Add(linkedGameObject.transform);
+			}
+		}
+	}
+
 	private bool isRequestAllowed(CursorState cs)
 	{
 		CursorState transitions;
@@ -93,7 +106,7 @@ public class MyCursor : MonoBehaviour {
 	public void RequestState(GameObject go, CursorState cs)
 	{
 		//allow other scripts to change the cursor state only when in the default state
-		Debug.Log ("Current State: " + _currentState.ToString () + "  Requested State: " +cs.ToString());
+		//Debug.Log ("Current State: " + _currentState.ToString () + "  Requested State: " +cs.ToString());
 
 		if(isRequestAllowed(cs))
 		{
@@ -115,7 +128,7 @@ public class MyCursor : MonoBehaviour {
 
 	private void checkPosForSelection(Vector2 vec)
 	{
-		Vector3 worldVec = _camera.ScreenToWorldPoint (new Vector3 (vec.x, vec.y, 10));
+		Vector3 worldVec = _camera.ScreenToWorldPoint (new Vector3 (vec.x, vec.y, _partsPlaneDistance));
 		RaycastHit2D hit = Physics2D.Raycast(new Vector2(worldVec.x, worldVec.y), Vector2.zero);
 		if (hit && hit.transform.parent == MechRoot.transform) {
 			if(!_selectedTransforms.Contains(hit.transform))
@@ -126,6 +139,7 @@ public class MyCursor : MonoBehaviour {
 	public void UnselectAll()
 	{
 		foreach (Transform t in _selectedTransforms) {
+			t.gameObject.GetComponent<RobotPart>().Selected = false;
 			Renderer[] rs = t.gameObject.GetComponentsInChildren<Renderer>();
 			foreach(Renderer r in rs)
 			{
@@ -312,6 +326,7 @@ public class MyCursor : MonoBehaviour {
 		}
 
 		foreach (Transform t in _selectedTransforms) {
+			t.gameObject.GetComponent<RobotPart>().Selected = true;
 			Renderer ren = t.gameObject.GetComponent<Renderer>();
 			if(!ren)
 				continue;
