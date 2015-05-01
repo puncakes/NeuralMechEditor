@@ -41,7 +41,7 @@ public class grid_items : MonoBehaviour {
 			}
 
 			go.transform.SetParent(b.transform, false);
-			go.transform.localScale = new Vector3(50,50,1);
+			go.transform.localScale = new Vector3(40,40,1);
 			bu.onClick.AddListener(() => genPrefab(crappyscopehack));
 		}
 	}

@@ -30,11 +30,13 @@ public class MyCursor : MonoBehaviour {
 		Selecting	=16,
 		Panning		=32,
 		Moving		=64,
-		Dummy		=128
+		Dummy		=128,
+		Menu		=256
 	}
 
 	public static Rect selection = new Rect(0,0,0,0);
 	private Vector3 startClick = -Vector3.one;
+	private float _partsPlaneDistance = 10.0f;
 
 	private CursorState _currentState, _previousState;
 	private Vector3 _prevMousePos;
@@ -72,6 +74,7 @@ public class MyCursor : MonoBehaviour {
 		_allowedTransitions.Add (CursorState.Panning, All & ~(CursorState.Panning));
 		_allowedTransitions.Add (CursorState.Moving, All & ~(CursorState.Moving | CursorState.Hovering | CursorState.Dummy));
 		_allowedTransitions.Add (CursorState.Dummy, All & ~(CursorState.Dummy));
+		_allowedTransitions.Add (CursorState.Menu, CursorState.Default);
 	}
 
 	private bool isRequestAllowed(CursorState cs)
@@ -90,7 +93,7 @@ public class MyCursor : MonoBehaviour {
 	public void RequestState(GameObject go, CursorState cs)
 	{
 		//allow other scripts to change the cursor state only when in the default state
-		//Debug.Log ("Current State: " + _currentState.ToString () + "  Requested State: " +cs.ToString());
+		Debug.Log ("Current State: " + _currentState.ToString () + "  Requested State: " +cs.ToString());
 
 		if(isRequestAllowed(cs))
 		{
@@ -105,9 +108,9 @@ public class MyCursor : MonoBehaviour {
 		RequestState(null, cs);
 	}
 
-	private Vector3 getScreenToWorld()
+	public Vector3 getScreenToWorld()
 	{
-		return _camera.ScreenToWorldPoint (new Vector3 (Input.mousePosition.x, Input.mousePosition.y, 10));
+		return _camera.ScreenToWorldPoint (new Vector3 (Input.mousePosition.x, Input.mousePosition.y, _partsPlaneDistance));
 	}
 
 	private void checkPosForSelection(Vector2 vec)
@@ -122,21 +125,21 @@ public class MyCursor : MonoBehaviour {
 
 	public void UnselectAll()
 	{
-		Transform[] ts = MechRoot.GetComponentsInChildren<Transform>();
-		if (ts.Length != 0) {
-			foreach (Transform t in ts) {
-				Renderer r = t.gameObject.GetComponent<Renderer>();
-				if(!r)
-					continue;
+		foreach (Transform t in _selectedTransforms) {
+			Renderer[] rs = t.gameObject.GetComponentsInChildren<Renderer>();
+			foreach(Renderer r in rs)
+			{
 				r.material.color = Color.white;
 			}
-
 		}
 		_selectedTransforms.Clear();
 	}
 
 	// Update is called once per frame
 	public void DoUpdate () {
+
+		//_camera.transform.position += new Vector3(0,0,Input.mouseScrollDelta.y);
+		//_partsPlaneDistance = 10.0f - _camera.transform.position.z;
 
 		CursorState stateAtStartOfFrame = _currentState;
 
@@ -156,6 +159,10 @@ public class MyCursor : MonoBehaviour {
 
 		case CursorState.Dummy:
 			requestState(CursorState.Default);
+			break;
+
+		case CursorState.Menu:
+
 			break;
 
 		case CursorState.Hovering:
@@ -305,10 +312,19 @@ public class MyCursor : MonoBehaviour {
 		}
 
 		foreach (Transform t in _selectedTransforms) {
-			Renderer r = t.gameObject.GetComponent<Renderer>();
-			if(!r)
+			Renderer ren = t.gameObject.GetComponent<Renderer>();
+			if(!ren)
 				continue;
-			r.material.color = Color.green;
+			ren.material.color = Color.green;
+			for(int i = 0; i < t.childCount; i++)
+			{
+				Transform child = t.GetChild(i);
+				Renderer[] rs = child.gameObject.GetComponentsInChildren<Renderer>();
+				foreach(Renderer r in rs)
+				{
+					r.material.color = new Color(0,1,0,0.5f);
+				}
+			}
 		}
 		_previousState = stateAtStartOfFrame;
 		_prevMousePos = Input.mousePosition;

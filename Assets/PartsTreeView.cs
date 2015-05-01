@@ -1,15 +1,73 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
+using UnityEngine.UI;
 
 public class PartsTreeView : MonoBehaviour {
 
+	public GameObject HierarchButton;
+
+	private static int _maxButtons = 100;
+	private GameObject[] _buttons = new GameObject[_maxButtons];
+
+	private int count;
+
 	// Use this for initialization
 	void Start () {
-	
+		for (int i = 0; i < _maxButtons; i++) {
+			_buttons[i] = (GameObject)Instantiate (HierarchButton);
+			_buttons[i].transform.SetParent (this.transform, false);
+			_buttons[i].GetComponent<DragHandler>().ButtonIndex = i;
+		}
 	}
 	
 	// Update is called once per frame
 	void Update () {
+
+		UpdateTree ();
+
+	}
+
+	public void UpdateTree()
+	{
+		Transform root = MyCursor.Instance.MechRoot.transform;
+
+		clearStructure ();
+		count = 0;
+		createStructure (root, 0);
+	}
+
+	void clearStructure ()
+	{
+		for (int i = 0; i < count; i++) {
+			CanvasGroup cg = _buttons[i].GetComponent<CanvasGroup>();
+			cg.alpha = 0;
+			cg.interactable = false;
+		}
+	}
+
+	void createStructure (Transform node, int lvl)
+	{
+		//breadth first traversal of the tree;	
+		for (int i = 0; i < node.childCount; i++) {
+			Transform t = node.GetChild (i);
+
+			_buttons[count].GetComponent<DragHandler>().LinkedGameObject = t.gameObject;
+
+			GameObject b = _buttons[count];
+		
+			CanvasGroup cg = b.GetComponent<CanvasGroup>();
+			cg.alpha = 1;
+			cg.interactable = true;
+
+			Button bu = b.GetComponent<Button> ();
+			bu.GetComponentInChildren<Text> ().text = "".PadLeft (lvl * 2) + t.gameObject.name;
+
+			count++;
+		}		
+		for (int i = 0; i < node.childCount; i++) {
+			createStructure(node.GetChild(i), lvl + 1);
+		}
 	
 	}
 }
