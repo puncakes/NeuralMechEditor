@@ -30,7 +30,7 @@ public class PartsTreeView : MonoBehaviour {
 
 	public void UpdateTree()
 	{
-		Transform root = MyCursor.Instance.MechRoot.transform;
+		Transform root = InputHandler.Instance.MechRoot.transform;
 
 		clearStructure ();
 		count = 0;

@@ -7,12 +7,14 @@ using System.Collections.Generic;
 //actually there is
 using System;
 
-public class MyCursor : MonoBehaviour {
+public class InputHandler : MonoBehaviour {
 
 	public GameObject MechRoot;
 	public static GameObject CurrentObject;
 	public GameObject SelectionPanel;
 	public Camera _camera;
+
+	public Camera Camera {get { return _camera; } }
 
 	//Cursor textures
 	public Texture2D _hovering, _moving;
@@ -44,7 +46,7 @@ public class MyCursor : MonoBehaviour {
 	private Dictionary<CursorState, CursorState> _allowedTransitions = new Dictionary<CursorState, CursorState> ();
 
 
-	public static MyCursor Instance { get; private set; }
+	public static InputHandler Instance { get; private set; }
 	
 	void Awake()
 	{
@@ -123,15 +125,20 @@ public class MyCursor : MonoBehaviour {
 
 	public Vector3 getScreenToWorld()
 	{
+		return _camera.ScreenToWorldPoint (new Vector3 (Input.mousePosition.x, Input.mousePosition.y, _partsPlaneDistance - _camera.transform.position.z));
+	}
+
+	public Vector3 getScreenToWorldUI ()
+	{
 		return _camera.ScreenToWorldPoint (new Vector3 (Input.mousePosition.x, Input.mousePosition.y, _partsPlaneDistance));
 	}
 
 	private void checkPosForSelection(Vector2 vec)
 	{
-		Vector3 worldVec = _camera.ScreenToWorldPoint (new Vector3 (vec.x, vec.y, _partsPlaneDistance));
+		Vector3 worldVec = getScreenToWorld();
 		RaycastHit2D hit = Physics2D.Raycast(new Vector2(worldVec.x, worldVec.y), Vector2.zero);
-		if (hit && hit.transform.parent == MechRoot.transform) {
-			if(!_selectedTransforms.Contains(hit.transform))
+		if (hit) {
+			if(!_selectedTransforms.Contains(hit.transform) && !_selectedTransforms.Contains(hit.transform.parent))
 				_selectedTransforms.Add(hit.transform);
 		}
 	}
@@ -152,7 +159,7 @@ public class MyCursor : MonoBehaviour {
 	// Update is called once per frame
 	public void DoUpdate () {
 
-		//_camera.transform.position += new Vector3(0,0,Input.mouseScrollDelta.y);
+		_camera.transform.position += new Vector3(0,0,Input.mouseScrollDelta.y);
 		//_partsPlaneDistance = 10.0f - _camera.transform.position.z;
 
 		CursorState stateAtStartOfFrame = _currentState;
@@ -216,7 +223,7 @@ public class MyCursor : MonoBehaviour {
 			}
 
 			if (Input.GetMouseButton (0)) {
-				Vector3 prevWorldPos = _camera.ScreenToWorldPoint(new Vector3(_prevMousePos.x, _prevMousePos.y, 10));
+				Vector3 prevWorldPos = _camera.ScreenToWorldPoint(new Vector3(_prevMousePos.x, _prevMousePos.y, _partsPlaneDistance - _camera.transform.position.z));
 				Vector3 curWorld = getScreenToWorld();
 
 				Vector3 worldDelta = curWorld - prevWorldPos;
@@ -284,16 +291,7 @@ public class MyCursor : MonoBehaviour {
 								_selectedTransforms.Add(t);
 						}
 					}
-
-					//loop for making sure topmost transform is selected
-					foreach(Transform t in tsList)
-					{
-						for(int i = 0; i < t.childCount; i++)
-						{
-							_selectedTransforms.Remove(t.GetChild(i));
-						}
-					}
-
+					
 					//check four corners of selection box for intersection with robot parts
 					//have to convert to world space for collider intersections. done in function
 					checkPosForSelection(selection.position);
@@ -325,6 +323,22 @@ public class MyCursor : MonoBehaviour {
 			break;
 		}
 
+		//loop for making sure topmost transform is selected
+		List<Transform> toRemove = new List<Transform>();
+		foreach(Transform t in _selectedTransforms)
+		{
+			for(int i = 0; i < t.childCount; i++)
+			{
+				toRemove.Add(t.GetChild(i));
+			}
+		}
+		
+		foreach(Transform t in toRemove)
+		{
+			_selectedTransforms.Remove(t);
+			t.gameObject.GetComponent<RobotPart>().Selected = false;
+		}
+		
 		foreach (Transform t in _selectedTransforms) {
 			t.gameObject.GetComponent<RobotPart>().Selected = true;
 			Renderer ren = t.gameObject.GetComponent<Renderer>();
@@ -341,6 +355,7 @@ public class MyCursor : MonoBehaviour {
 				}
 			}
 		}
+
 		_previousState = stateAtStartOfFrame;
 		_prevMousePos = Input.mousePosition;
 	}

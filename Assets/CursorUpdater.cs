@@ -11,6 +11,6 @@ public class CursorUpdater : MonoBehaviour {
 	// Update is called once per frame
 	void Update () {
 		//only way I can think of to update the singleton
-		MyCursor.Instance.DoUpdate ();
+		InputHandler.Instance.DoUpdate ();
 	}
 }

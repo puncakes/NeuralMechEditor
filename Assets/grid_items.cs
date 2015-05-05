@@ -51,7 +51,7 @@ public class grid_items : MonoBehaviour {
 		GameObject go = Instantiate (_prefabs[index]);
 		//call cursor script and hand the prefab to it
 
-		MyCursor.Instance.RequestState (go, MyCursor.CursorState.Placing);
+		InputHandler.Instance.RequestState (go, InputHandler.CursorState.Placing);
 
 	}
 

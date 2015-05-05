@@ -30,20 +30,23 @@ public class DragHandler : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
 
 	void OnClick()
 	{
-		MyCursor.Instance.selectGameObject (LinkedGameObject);
+		InputHandler.Instance.selectGameObject (LinkedGameObject);
 	}
 
 	public void OnBeginDrag (PointerEventData eventData)
 	{
-		MyCursor.Instance.RequestState (this.gameObject, MyCursor.CursorState.Menu);
+		if (LinkedGameObject) {
+			InputHandler.Instance.RequestState (this.gameObject, InputHandler.CursorState.Menu);
 
-		//static so when dropped, other scripts will be able to get the correct linked object
-		_linkedGameObject = LinkedGameObject;
-		_buttonGhost.GetComponentInChildren<Text> ().text = LinkedGameObject.name;
-		_buttonGhost.GetComponentInChildren<RectTransform> ().sizeDelta = new Vector2 (200, 20);
-		_buttonGhost.GetComponent<CanvasGroup> ().alpha = 1f;
-		_buttonGhost.GetComponent<CanvasGroup> ().interactable = true;
-		_buttonGhost.transform.SetParent (_canvas.transform, false);
+			//static so when dropped, other scripts will be able to get the correct linked object
+			_linkedGameObject = LinkedGameObject;
+			//_buttonGhost.transform.position = new Vector3 (_buttonGhost.transform.position.x, _buttonGhost.transform.position.y, InputHandler.Instance.Camera.transform.position.z + 10.0f);
+			_buttonGhost.GetComponentInChildren<Text> ().text = LinkedGameObject.name;
+			_buttonGhost.GetComponentInChildren<RectTransform> ().sizeDelta = new Vector2 (200, 20);
+			_buttonGhost.GetComponent<CanvasGroup> ().alpha = 1f;
+			_buttonGhost.GetComponent<CanvasGroup> ().interactable = true;
+			_buttonGhost.transform.SetParent (_canvas.transform, false);
+		}
 	}
 
 	#endregion
@@ -52,7 +55,8 @@ public class DragHandler : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
 
 	public void OnDrag (PointerEventData eventData)
 	{
-		_buttonGhost.transform.position = MyCursor.Instance.getScreenToWorld ();
+
+		_buttonGhost.transform.position = InputHandler.Instance.getScreenToWorldUI();
 	}
 
 	#endregion
@@ -61,7 +65,7 @@ public class DragHandler : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
 
 	public void OnEndDrag (PointerEventData eventData)
 	{
-		MyCursor.Instance.RequestState (this.gameObject, MyCursor.CursorState.Default);
+		InputHandler.Instance.RequestState (this.gameObject, InputHandler.CursorState.Default);
 		_buttonGhost.GetComponent<CanvasGroup> ().alpha = 0f;
 		_buttonGhost.GetComponent<CanvasGroup> ().interactable = false;
 		//_linkedGameObject = null;

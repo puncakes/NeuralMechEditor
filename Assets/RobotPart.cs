@@ -20,11 +20,11 @@ public class RobotPart : MonoBehaviour {
 
 	void OnMouseOver()
 	{
-		MyCursor.Instance.RequestState (this.gameObject, MyCursor.CursorState.Hovering);
+		InputHandler.Instance.RequestState (this.gameObject, InputHandler.CursorState.Hovering);
 	}
 
 	void OnMouseExit()
 	{
-		MyCursor.Instance.RequestState (this.gameObject, MyCursor.CursorState.Dummy);
+		InputHandler.Instance.RequestState (this.gameObject, InputHandler.CursorState.Dummy);
 	}
 }
