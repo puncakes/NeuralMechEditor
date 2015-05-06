@@ -284,6 +284,10 @@ public class InputHandler : MonoBehaviour {
 					tsList.Remove(MechRoot.transform);
 					foreach(Transform t in tsList)
 					{
+						RobotPart rp = t.GetComponent<RobotPart>();
+						if(!rp)
+							continue;
+
 						Vector3 pos = _camera.WorldToScreenPoint(t.position);
 						if(selection.Contains(pos))
 						{
@@ -329,7 +333,10 @@ public class InputHandler : MonoBehaviour {
 		{
 			for(int i = 0; i < t.childCount; i++)
 			{
-				toRemove.Add(t.GetChild(i));
+				Transform child = t.GetChild(i);
+				RobotPart rp = child.gameObject.GetComponent<RobotPart>();
+				if(rp)
+					toRemove.Add(child);
 			}
 		}
 		

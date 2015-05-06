@@ -51,6 +51,8 @@ public class PartsTreeView : MonoBehaviour {
 	{
 		for (int i = 0; i < node.childCount; i++) {
 			Transform t = node.GetChild (i);
+			if(t.gameObject.name.Contains("Selection Border"))
+				continue;
 
 			DragHandler drag = _buttons[count].GetComponent<DragHandler>();
 			drag.LinkedGameObject = t.gameObject;
